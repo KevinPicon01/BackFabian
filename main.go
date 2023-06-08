@@ -16,7 +16,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
 	PORT := os.Getenv("PORT")
 	JWT_SECRET := os.Getenv("JWT_SECRET")
 	DATABASE_URL := os.Getenv("DATABASE_URL")
@@ -30,9 +29,9 @@ func main() {
 		log.Fatal(err)
 	}
 	serv.Start(BindRouters)
+
 }
 func BindRouters(s server.Server, r *mux.Router) {
-	r.Use(Middleware.CheckAuthMiddleware(s))
 
 	r.HandleFunc("/", handlers.HomeHandler(s)).Methods("GET")
 	r.HandleFunc("/signup", handlers.SignUpHandler(s)).Methods("POST")
@@ -40,6 +39,6 @@ func BindRouters(s server.Server, r *mux.Router) {
 	r.HandleFunc("/me", handlers.MeHandler(s)).Methods("GET")
 	r.HandleFunc("/users", handlers.UsersHandler(s)).Methods("GET")
 	r.HandleFunc("/service", handlers.ServiceHandler(s)).Methods("POST")
-	r.HandleFunc("/ecan", handlers.UpdateEcan(s)).Methods("POST")
-
+	r.HandleFunc("/ecan", handlers.UpdateEcan(s)).Methods("GET")
+	r.Use(Middleware.CheckAuthMiddleware(s))
 }

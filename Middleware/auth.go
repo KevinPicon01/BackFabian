@@ -1,6 +1,7 @@
 package Middleware
 
 import (
+	"fmt"
 	"github.com/golang-jwt/jwt"
 	"kevinPicon/go/rest-ws/models"
 	"kevinPicon/go/rest-ws/server"
@@ -27,6 +28,7 @@ func shouldCheckToken(route string) bool {
 func CheckAuthMiddleware(s server.Server) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Println("Init CheckAuthMiddleware()")
 			if !shouldCheckToken(r.URL.Path) {
 				next.ServeHTTP(w, r)
 				return
@@ -43,4 +45,3 @@ func CheckAuthMiddleware(s server.Server) func(next http.Handler) http.Handler {
 		})
 	}
 }
-

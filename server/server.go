@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"kevinPicon/go/rest-ws/database"
 	"kevinPicon/go/rest-ws/repository"
@@ -53,9 +54,12 @@ func (b *Broker) Start(binder func(s Server, r *mux.Router)) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	header := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
+	methods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"})
+	origins := handlers.AllowedOrigins([]string{"*"})
 	repository.SetRepository(repo)
 	log.Println("Starting server on port", b.Config().Port)
-	if err := http.ListenAndServe(b.config.Port, b.router); err != nil {
+	if err := http.ListenAndServe(b.config.Port, handlers.CORS(header, methods, origins)(b.router)); err != nil {
 		log.Fatal(err)
 	}
 }

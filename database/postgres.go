@@ -88,6 +88,7 @@ func (repo *PostgresRepository) GetUserByEmail(ctx context.Context, email string
 }
 func (repo *PostgresRepository) GetUsers(ctx context.Context) ([]*models.UserPayload, error) {
 	fmt.Println("Init get users")
+
 	rows, err := repo.db.QueryContext(ctx, `
     SELECT id, name, email, age, cc, birth_date, address, suburb, voting_place, civil_status, phone, ecan FROM users`)
 	if err != nil {

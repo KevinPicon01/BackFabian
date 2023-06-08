@@ -64,7 +64,7 @@ func SignUpHandler(s server.Server) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		// validate user dont exist
+		//validate user dont exist
 		userV, err := repository.GetUserByEmail(r.Context(), request.Email)
 		if err != nil {
 			fmt.Println("Error getting user by email")
@@ -79,6 +79,7 @@ func SignUpHandler(s server.Server) http.HandlerFunc {
 			})
 			return
 		}
+
 		hashedPass, err := bcrypt.GenerateFromPassword([]byte(request.Password), HASH_COST)
 		if err != nil {
 			fmt.Println("Error hashing password")
@@ -207,6 +208,15 @@ func MeHandler(s server.Server) http.HandlerFunc {
 }
 func UsersHandler(s server.Server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		tokenString := strings.TrimSpace(r.Header.Get("Authorization"))
+		tokenString = strings.Replace(tokenString, "Bearer ", "", -1)
+		_, err := jwt.ParseWithClaims(tokenString, &models.AppClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(s.Config().JWTSecret), nil
+		})
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
 		users, err := repository.GetUsers(r.Context())
 		if err != nil {
 			fmt.Println("Error getting users")
