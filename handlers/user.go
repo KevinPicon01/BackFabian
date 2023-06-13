@@ -49,6 +49,7 @@ type SignUpResponse struct {
 	Id    string `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
+	Token string `json:"token"`
 }
 type errorResponse struct {
 	Message string `json:"message"`
@@ -67,7 +68,7 @@ func SignUpHandler(s server.Server) http.HandlerFunc {
 		//validate user dont exist
 		userV, err := repository.GetUserByEmail(r.Context(), request.Email)
 		if err != nil {
-			fmt.Println("Error getting user by email")
+			fmt.Println("Error getting user by email", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -127,11 +128,24 @@ func SignUpHandler(s server.Server) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		claims := models.AppClaims{
+			UserId: user.Id,
+			StandardClaims: jwt.StandardClaims{
+				ExpiresAt: time.Now().Add(2 * time.Hour * 24).Unix(),
+			},
+		}
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+		tokenString, err := token.SignedString([]byte(s.Config().JWTSecret))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(SignUpResponse{
 			Id:    user.Id,
 			Name:  user.Name,
 			Email: user.Email,
+			Token: tokenString,
 		})
 	}
 
@@ -144,9 +158,7 @@ func LoginHandler(s server.Server) http.HandlerFunc {
 			http.Error(w, "Error de datos", http.StatusBadRequest)
 			return
 		}
-
 		user, err := repository.GetUserByEmail(r.Context(), request.Email)
-
 		if err != nil {
 			http.Error(w, "Error GUE", http.StatusInternalServerError)
 			return
