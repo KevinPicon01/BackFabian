@@ -1,6 +1,3 @@
-FROM postgres:10.3
-
-
 ARG GO_VERSION=1.18.1
 
 FROM golang:${GO_VERSION}-alpine AS builder
@@ -10,9 +7,7 @@ RUN apk add --no-cache git
 RUN apk --no-cache add ca-certificates && update-ca-certificates
 
 WORKDIR /src
-COPY up.sql /docker-entrypoint-initdb.d/1.sql
 
-CMD ["postgres"]
 COPY ./go.mod ./go.sum ./
 RUN go mod download
 

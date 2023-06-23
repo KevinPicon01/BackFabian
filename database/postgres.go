@@ -118,6 +118,13 @@ func (repo *PostgresRepository) GetUsers(ctx context.Context) ([]*models.UserPay
 			return nil, fmt.Errorf("error getting services: %w", err)
 		}
 		user.Services = services
+		complaints, err := repo.GetComplaintsByUserID(ctx, user.Id)
+		fmt.Println("complaints: ", complaints)
+		if err != nil {
+			fmt.Println("error getting complaints: ", err)
+			return nil, fmt.Errorf("error getting complaints: %w", err)
+		}
+		user.Complaints = complaints
 		fmt.Println("user: ", user)
 		users = append(users, &user)
 	}
@@ -183,6 +190,36 @@ func (repo *PostgresRepository) UpdateEcan(ctx context.Context, id string) error
 		return fmt.Errorf("error updating ecan: %w", err)
 	}
 	return nil
+}
+func (repo *PostgresRepository) InsertComplaints(ctx context.Context, complaint models.Complaint) error {
+	fmt.Println("Init insert complaints")
+	_, err := repo.db.ExecContext(ctx, ` INSERT INTO complaints (id, user_id, complaint) VALUES ($1, $2, $3)`, complaint.Id, complaint.UserId, complaint.Complaint)
+	if err != nil {
+		fmt.Println("error inserting complaints: ", err)
+		return fmt.Errorf("error inserting complaints: %w", err)
+	}
+	return nil
+}
+func (repo *PostgresRepository) GetComplaintsByUserID(ctx context.Context, userId string) ([]*models.ComplaintPayload, error) {
+	fmt.Println("Init get complaints")
+	rows, err := repo.db.QueryContext(ctx, `
+	SELECT complaint FROM complaints WHERE user_id = $1`, userId)
+	if err != nil {
+		fmt.Println("error querying complaints: ", err)
+		return nil, fmt.Errorf("error querying complaints: %w", err)
+	}
+	defer rows.Close()
+	complaints := []*models.ComplaintPayload{}
+	for rows.Next() {
+		var complaint models.ComplaintPayload
+		if err := rows.Scan(&complaint.Complaint); err != nil {
+			fmt.Println("error scanning complaints: ", err)
+			return nil, fmt.Errorf("error scanning complaints: %w", err)
+		}
+		complaints = append(complaints, &complaint)
+
+	}
+	return complaints, nil
 }
 func (repo *PostgresRepository) Close() error {
 	return repo.db.Close()

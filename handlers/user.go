@@ -18,6 +18,9 @@ const (
 	HASH_COST = 8
 )
 
+type ComplaintsRequest struct {
+	Complaint string `json:"complaint"`
+}
 type SignUpRequest struct {
 	Name        string         `json:"name"`
 	LastName    string         `json:"last_name"`
@@ -288,6 +291,42 @@ func UpdateEcan(s server.Server) http.HandlerFunc {
 		}
 		if claims, ok := token.Claims.(*models.AppClaims); ok && token.Valid {
 			err = repository.UpdateEcan(r.Context(), claims.UserId)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode("OK")
+	}
+}
+func InsertComplaints(s server.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		tokenString := strings.TrimSpace(r.Header.Get("Authorization"))
+		tokenString = strings.Replace(tokenString, "Bearer ", "", -1)
+		token, err := jwt.ParseWithClaims(tokenString, &models.AppClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(s.Config().JWTSecret), nil
+		})
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		if claims, ok := token.Claims.(*models.AppClaims); ok && token.Valid {
+			var request = ComplaintsRequest{}
+			err := json.NewDecoder(r.Body).Decode(&request)
+			if err != nil {
+				http.Error(w, "Error de datos", http.StatusBadRequest)
+				return
+			}
+			var complaint = models.Complaint{
+				Id:        ksuid.New().String(),
+				UserId:    claims.UserId,
+				Complaint: request.Complaint,
+			}
+			err = repository.InsertComplaints(r.Context(), complaint)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				return

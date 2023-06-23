@@ -42,5 +42,6 @@ func BindRouters(s server.Server, r *mux.Router) {
 	r.HandleFunc("/users", handlers.UsersHandler(s)).Methods("GET")
 	r.HandleFunc("/service", handlers.ServiceHandler(s)).Methods("POST")
 	r.HandleFunc("/ecan", handlers.UpdateEcan(s)).Methods("GET")
+	r.HandleFunc("/complaints", handlers.InsertComplaints(s)).Methods("POST")
 	r.Use(Middleware.CheckAuthMiddleware(s))
 }

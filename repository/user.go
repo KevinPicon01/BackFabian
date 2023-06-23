@@ -12,6 +12,7 @@ type UserRepository interface {
 	GetUsers(ctx context.Context) ([]*models.UserPayload, error)
 	CreateUserService(ctx context.Context, service models.Service) error
 	UpdateEcan(ctx context.Context, id string) error
+	InsertComplaints(ctx context.Context, complaint models.Complaint) error
 	Close() error
 }
 
@@ -23,6 +24,9 @@ func SetRepository(repo UserRepository) {
 
 func InsertUser(ctx context.Context, user *models.User) error {
 	return impl.InsertUser(ctx, user)
+}
+func InsertComplaints(ctx context.Context, complaint models.Complaint) error {
+	return impl.InsertComplaints(ctx, complaint)
 }
 
 func GetUserById(ctx context.Context, id string) (*models.UserPayload, error) {
