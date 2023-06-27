@@ -39,7 +39,7 @@ type UserPayload struct {
 	Id          string              `json:"id"`
 	Name        string              `json:"name"`
 	Email       string              `json:"email"`
-	Age         int                 `json:"age"`
+	Age         string              `json:"age"`
 	Cc          string              `json:"cc"`
 	BirthDate   string              `json:"birth_date"`
 	Address     string              `json:"address"`
